@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 //import { CameraUtils } from "three/examples/jsm/utils/CameraUtils";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
+import roomDown from "./images/room_dn.jpg";
 
 let camera, scene, renderer;
 
@@ -112,9 +113,10 @@ function init() {
   planeTop.rotateX(Math.PI / 2);
   scene.add(planeTop);
 
+  const texture = new THREE.TextureLoader().load(roomDown);
   const planeBottom = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ color: 0xffffff })
+    new THREE.MeshPhongMaterial({ map: texture })
   );
   planeBottom.rotateX(-Math.PI / 2);
   scene.add(planeBottom);
