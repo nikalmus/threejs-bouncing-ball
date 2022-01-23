@@ -1,84 +1,262 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+//import { CameraUtils } from "three/examples/jsm/utils/CameraUtils";
+import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
 
-const scene = new THREE.Scene();
+let camera, scene, renderer;
 
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.set(0, 20, 50);
-camera.lookAt(0, 0, 0);
+let cameraControls;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.domElement.id = "canvas";
-document.body.appendChild(renderer.domElement);
-const controls = new OrbitControls(camera, renderer.domElement);
+let smallSphereOne, smallSphereTwo;
 
-function addLighting(scene) {
-  let color = 0xffffff;
-  let intensity = 1;
-  let light = new THREE.DirectionalLight(color, intensity);
-  light.position.set(0, 10, 0);
-  light.target.position.set(-5, -2, -5);
-  scene.add(light);
-  scene.add(light.target);
-}
-addLighting(scene);
+let portalCamera,
+  leftPortal,
+  rightPortal,
+  leftPortalTexture,
+  reflectedPosition,
+  rightPortalTexture,
+  bottomLeftCorner,
+  bottomRightCorner,
+  topLeftCorner;
 
-function addFloor(scene) {
-  let geometry = new THREE.BoxGeometry(50, 1, 50);
-  let material = new THREE.MeshStandardMaterial({
-    color: 0xdddddd,
-    roughness: 0,
+function init() {
+  // renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.localClippingEnabled = true;
+  renderer.domElement.id = "canvas";
+  document.body.appendChild(renderer.domElement);
+
+  // scene
+  scene = new THREE.Scene();
+
+  // camera
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    1,
+    5000
+  );
+  camera.position.set(0, 75, 160);
+
+  cameraControls = new OrbitControls(camera, renderer.domElement);
+  cameraControls.target.set(0, 40, 0);
+  cameraControls.maxDistance = 400;
+  cameraControls.minDistance = 10;
+  cameraControls.update();
+
+  //
+
+  const planeGeo = new THREE.PlaneGeometry(100.1, 100.1);
+
+  // bouncing icosphere
+  const portalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.0);
+  const geometry = new THREE.IcosahedronGeometry(5, 0);
+  const material = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    emissive: 0x333333,
+    flatShading: true,
+    clippingPlanes: [portalPlane],
+    clipShadows: true,
   });
-  const floor = new THREE.Mesh(geometry, material);
-  floor.position.set(0, -10, 0);
-  floor.name = "my-floor";
-  scene.add(floor);
-}
-addFloor(scene);
+  smallSphereOne = new THREE.Mesh(geometry, material);
+  scene.add(smallSphereOne);
+  smallSphereTwo = new THREE.Mesh(geometry, material);
+  scene.add(smallSphereTwo);
 
-function addSphere(scene) {
-  let geometry = new THREE.SphereGeometry(5, 32, 32);
-  let material = new THREE.MeshStandardMaterial({
-    color: 0x0000ff,
-    roughness: 0,
+  // portals
+  portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
+  scene.add(portalCamera);
+  //frustumHelper = new THREE.CameraHelper( portalCamera );
+  //scene.add( frustumHelper );
+  bottomLeftCorner = new THREE.Vector3();
+  bottomRightCorner = new THREE.Vector3();
+  topLeftCorner = new THREE.Vector3();
+  reflectedPosition = new THREE.Vector3();
+
+  leftPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBFormat,
   });
-  let sphere = new THREE.Mesh(geometry, material);
-  sphere.position.set(0, 5, 0);
-  sphere.name = "my-sphere";
-  scene.add(sphere);
+  leftPortal = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshBasicMaterial({ map: leftPortalTexture.texture })
+  );
+  leftPortal.position.x = -30;
+  leftPortal.position.y = 20;
+  leftPortal.scale.set(0.35, 0.35, 0.35);
+  scene.add(leftPortal);
+
+  rightPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBFormat,
+  });
+  rightPortal = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshBasicMaterial({ map: rightPortalTexture.texture })
+  );
+  rightPortal.position.x = 30;
+  rightPortal.position.y = 20;
+  rightPortal.scale.set(0.35, 0.35, 0.35);
+  scene.add(rightPortal);
+
+  // walls
+  const planeTop = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0xffffff })
+  );
+  planeTop.position.y = 100;
+  planeTop.rotateX(Math.PI / 2);
+  scene.add(planeTop);
+
+  const planeBottom = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0xffffff })
+  );
+  planeBottom.rotateX(-Math.PI / 2);
+  scene.add(planeBottom);
+
+  const planeFront = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0x7f7fff })
+  );
+  planeFront.position.z = 50;
+  planeFront.position.y = 50;
+  planeFront.rotateY(Math.PI);
+  scene.add(planeFront);
+
+  const planeBack = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0xff7fff })
+  );
+  planeBack.position.z = -50;
+  planeBack.position.y = 50;
+  //planeBack.rotateY( Math.PI );
+  scene.add(planeBack);
+
+  const planeRight = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0x00ff00 })
+  );
+  planeRight.position.x = 50;
+  planeRight.position.y = 50;
+  planeRight.rotateY(-Math.PI / 2);
+  scene.add(planeRight);
+
+  const planeLeft = new THREE.Mesh(
+    planeGeo,
+    new THREE.MeshPhongMaterial({ color: 0xff0000 })
+  );
+  planeLeft.position.x = -50;
+  planeLeft.position.y = 50;
+  planeLeft.rotateY(Math.PI / 2);
+  scene.add(planeLeft);
+
+  // lights
+  const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
+  mainLight.position.y = 60;
+  scene.add(mainLight);
+
+  const greenLight = new THREE.PointLight(0x00ff00, 0.25, 1000);
+  greenLight.position.set(550, 50, 0);
+  scene.add(greenLight);
+
+  const redLight = new THREE.PointLight(0xff0000, 0.25, 1000);
+  redLight.position.set(-550, 50, 0);
+  scene.add(redLight);
+
+  const blueLight = new THREE.PointLight(0x7f7fff, 0.25, 1000);
+  blueLight.position.set(0, 50, 550);
+  scene.add(blueLight);
+
+  window.addEventListener("resize", onWindowResize);
 }
-addSphere(scene);
 
-let acceleration = 10; //9.8;
-let bounceDistance = 9; //initial y=5, bottom y=-4
-let bottomPositionY = -4;
-let timeIncrement = 0.02;
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 
-//fall time is derived from formula that defines distance: d = 0.5 * g * t*t
-let fallTime = Math.sqrt(bounceDistance / (0.5 * acceleration));
-let initialSpeed = acceleration * fallTime;
-let sphere = scene.getObjectByName("my-sphere");
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
-const animate = () => {
+function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
+  // set the portal camera position to be reflected about the portal plane
+  thisPortalMesh.worldToLocal(reflectedPosition.copy(camera.position));
+  reflectedPosition.x *= -1.0;
+  reflectedPosition.z *= -1.0;
+  otherPortalMesh.localToWorld(reflectedPosition);
+  portalCamera.position.copy(reflectedPosition);
+
+  // grab the corners of the other portal
+  // - note: the portal is viewed backwards; flip the left/right coordinates
+  otherPortalMesh.localToWorld(bottomLeftCorner.set(50.05, -50.05, 0.0));
+  otherPortalMesh.localToWorld(bottomRightCorner.set(-50.05, -50.05, 0.0));
+  otherPortalMesh.localToWorld(topLeftCorner.set(50.05, 50.05, 0.0));
+  // set the projection matrix to encompass the portal's frame
+  //CameraUtils.frameCorners(
+  frameCorners(
+    portalCamera,
+    bottomLeftCorner,
+    bottomRightCorner,
+    topLeftCorner,
+    false
+  );
+
+  // render the portal
+  thisPortalTexture.texture.encoding = renderer.outputEncoding;
+  renderer.setRenderTarget(thisPortalTexture);
+  renderer.state.buffers.depth.setMask(true); // make sure the depth buffer is writable so it can be properly cleared, see #18897
+  if (renderer.autoClear === false) renderer.clear();
+  thisPortalMesh.visible = false; // hide this portal from its own rendering
+  renderer.render(scene, portalCamera);
+  thisPortalMesh.visible = true; // re-enable this portal's visibility for general rendering
+}
+
+function animate() {
   requestAnimationFrame(animate);
-  // reset fallTime back to the start of the bouncing sequence when sphere hits through the bottom position
-  if (sphere.position.y < bottomPositionY) {
-    fallTime = 0;
-  }
-  // calculate sphere position with the s2 = s1 + ut + (1/2)gt*t formula
-  // this formula assumes the ball to be bouncing off from the bottom position when fallTime is zero
-  sphere.position.y =
-    bottomPositionY +
-    initialSpeed * fallTime -
-    0.5 * acceleration * fallTime * fallTime;
-  // advance time
-  fallTime += timeIncrement;
+
+  // move the bouncing sphere(s)
+  const timerOne = Date.now() * 0.01;
+  const timerTwo = timerOne + Math.PI * 10.0;
+
+  smallSphereOne.position.set(
+    Math.cos(timerOne * 0.1) * 30,
+    Math.abs(Math.cos(timerOne * 0.2)) * 20 + 5,
+    Math.sin(timerOne * 0.1) * 30
+  );
+  smallSphereOne.rotation.y = Math.PI / 2 - timerOne * 0.1;
+  smallSphereOne.rotation.z = timerOne * 0.8;
+
+  smallSphereTwo.position.set(
+    Math.cos(timerTwo * 0.1) * 30,
+    Math.abs(Math.cos(timerTwo * 0.2)) * 20 + 5,
+    Math.sin(timerTwo * 0.1) * 30
+  );
+  smallSphereTwo.rotation.y = Math.PI / 2 - timerTwo * 0.1;
+  smallSphereTwo.rotation.z = timerTwo * 0.8;
+
+  // save the original camera properties
+  const currentRenderTarget = renderer.getRenderTarget();
+  const currentXrEnabled = renderer.xr.enabled;
+  const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
+  renderer.xr.enabled = false; // Avoid camera modification
+  renderer.shadowMap.autoUpdate = false; // Avoid re-computing shadows
+
+  // render the portal effect
+  renderPortal(leftPortal, rightPortal, leftPortalTexture);
+  renderPortal(rightPortal, leftPortal, rightPortalTexture);
+
+  // restore the original rendering properties
+  renderer.xr.enabled = currentXrEnabled;
+  renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
+  renderer.setRenderTarget(currentRenderTarget);
+
+  // render the main scene
   renderer.render(scene, camera);
-};
+}
+
+init();
 animate();
