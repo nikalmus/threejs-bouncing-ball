@@ -1,8 +1,11 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-//import { CameraUtils } from "three/examples/jsm/utils/CameraUtils";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
-import roomDown from "./images/room_dn.jpg";
+import rightWall from "./images/rightWall.jpg";
+import leftWall from "./images/leftWall.jpg";
+import backWall from "./images/backWall.jpg";
+import floor from "./images/floor.jpg";
+
 
 let camera, scene, renderer;
 
@@ -113,44 +116,48 @@ function init() {
   planeTop.rotateX(Math.PI / 2);
   scene.add(planeTop);
 
-  const texture = new THREE.TextureLoader().load(roomDown);
+  const floorTexture = new THREE.TextureLoader().load(floor);
   const planeBottom = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map: texture })
+    new THREE.MeshPhongMaterial({ map: floorTexture })
   );
   planeBottom.rotateX(-Math.PI / 2);
   scene.add(planeBottom);
 
+  const frontWallTexture = new THREE.TextureLoader().load(rightWall);
   const planeFront = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ color: 0x7f7fff })
+    new THREE.MeshPhongMaterial({ map: frontWallTexture })
   );
   planeFront.position.z = 50;
   planeFront.position.y = 50;
   planeFront.rotateY(Math.PI);
   scene.add(planeFront);
 
+  const backWallTexture = new THREE.TextureLoader().load(backWall);
   const planeBack = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ color: 0xff7fff })
+    new THREE.MeshPhongMaterial({ map:  backWallTexture})
   );
   planeBack.position.z = -50;
   planeBack.position.y = 50;
   //planeBack.rotateY( Math.PI );
   scene.add(planeBack);
 
+  const rightWallTexture = new THREE.TextureLoader().load(rightWall);
   const planeRight = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ color: 0x00ff00 })
+    new THREE.MeshPhongMaterial({ map: rightWallTexture })
   );
   planeRight.position.x = 50;
   planeRight.position.y = 50;
   planeRight.rotateY(-Math.PI / 2);
   scene.add(planeRight);
 
+  const leftWallTexture = new THREE.TextureLoader().load(leftWall);
   const planeLeft = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    new THREE.MeshPhongMaterial({ map: leftWallTexture })
   );
   planeLeft.position.x = -50;
   planeLeft.position.y = 50;
