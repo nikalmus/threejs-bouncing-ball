@@ -5,6 +5,8 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import rightWall from "./images/rightWall.jpg";
 import leftWall from "./images/leftWall.jpg";
 import backWall from "./images/backWall.jpg";
+import forgetMonkeys from "./images/forgetMonkeys.jpg";
+import wall from "./images/wall.jpg";
 import one from "./images/1.png";
 import two from "./images/2.png";
 import three from "./images/3.png";
@@ -29,6 +31,37 @@ let portalCamera,
   bottomLeftCorner,
   bottomRightCorner,
   topLeftCorner;
+
+
+  
+  function handleHover(event) { //does not work
+    event.preventDefault();
+    console.log(event)
+    mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+    console.log('before if', intersects.length)
+    if (intersects.length > 0 && intersects[0].object.userData.URL) {
+      console.log('inside if')
+        const body = document.querySelector('body');
+        body.style.cursor = 'pointer'
+    }
+  } 
+
+let raycaster, mouse;
+  
+  function handleClick(event) {
+    event.preventDefault();
+    mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+    if (intersects.length > 0 && intersects[0].object.userData.URL) {
+        console.log('two', intersects[0])
+        window.open(intersects[0].object.userData.URL);
+    }
+  } 
 
 function init() {
   // renderer
@@ -140,15 +173,31 @@ function init() {
   planeFront.rotateY(Math.PI);
   scene.add(planeFront);
 
-  const backWallTexture = new THREE.TextureLoader().load(backWall);
+  const backWallTexture = new THREE.TextureLoader().load(wall);
   const planeBack = new THREE.Mesh(
     planeGeo,
     new THREE.MeshPhongMaterial({ map:  backWallTexture})
+
   );
   planeBack.position.z = -50;
   planeBack.position.y = 50;
   //planeBack.rotateY( Math.PI );
+  //planeBack.userData = { URL: "https://duckduckgo.com/"};
   scene.add(planeBack);
+
+  const pictureGeo = new THREE.PlaneGeometry(48, 62);
+  const pictureTexture = new THREE.TextureLoader().load(forgetMonkeys);
+  const planePicture = new THREE.Mesh(
+    pictureGeo,
+    new THREE.MeshPhongMaterial({ map:  pictureTexture})
+
+  );
+  planePicture.position.z = -49;
+  planePicture.position.y = 50;
+  //planeBack.rotateY( Math.PI );
+  planePicture.userData = { URL: "https://duckduckgo.com/"};
+  scene.add(planePicture);
+
 
   const rightWallTexture = new THREE.TextureLoader().load(rightWall);
   const planeRight = new THREE.Mesh(
@@ -172,7 +221,7 @@ function init() {
 
   // lights
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
-  mainLight.position.y = 60;
+  mainLight.position.y = 12;
   scene.add(mainLight);
 
   const greenLight = new THREE.PointLight(0x00ff00, 0.25, 1000);
@@ -188,12 +237,15 @@ function init() {
   scene.add(blueLight);
 
   window.addEventListener("resize", onWindowResize);
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+  window.addEventListener("click", handleClick);
+  window.addEventListener("mouseover", handleHover); //does not work
 }
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
