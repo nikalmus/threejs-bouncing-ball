@@ -1,9 +1,16 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import rightWall from "./images/rightWall.jpg";
 import leftWall from "./images/leftWall.jpg";
 import backWall from "./images/backWall.jpg";
+import one from "./images/1.png";
+import two from "./images/2.png";
+import three from "./images/3.png";
+import four from "./images/4.png";
+import five from "./images/5.png";
+import six from "./images/6.png";
 import floor from "./images/floor.jpg";
 
 
@@ -54,26 +61,25 @@ function init() {
 
   const planeGeo = new THREE.PlaneGeometry(100.1, 100.1);
 
-  // bouncing icosphere
+  // bouncing dice
   const portalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.0);
-  const geometry = new THREE.IcosahedronGeometry(5, 0);
-  const material = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
+  const geometry = new RoundedBoxGeometry(5,5,5,6,1);
+  const faces = [one, two, three, four, five, six];
+  const materials = faces.map((face) => new THREE.MeshPhongMaterial({
+    map: new THREE.TextureLoader().load(face),
     emissive: 0x333333,
     flatShading: true,
     clippingPlanes: [portalPlane],
     clipShadows: true,
-  });
-  smallSphereOne = new THREE.Mesh(geometry, material);
+  }));
+  smallSphereOne = new THREE.Mesh(geometry, materials);
   scene.add(smallSphereOne);
-  smallSphereTwo = new THREE.Mesh(geometry, material);
+  smallSphereTwo = new THREE.Mesh(geometry, materials);
   scene.add(smallSphereTwo);
 
   // portals
   portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
   scene.add(portalCamera);
-  //frustumHelper = new THREE.CameraHelper( portalCamera );
-  //scene.add( frustumHelper );
   bottomLeftCorner = new THREE.Vector3();
   bottomRightCorner = new THREE.Vector3();
   topLeftCorner = new THREE.Vector3();
