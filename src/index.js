@@ -2,10 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
-import rightWall from "./images/rightWall.jpg";
-import leftWall from "./images/leftWall.jpg";
-import backWall from "./images/backWall.jpg";
 import forgetMonkeys from "./images/forgetMonkeys.jpg";
+import portrait from "./images/portrait.jpg";
 import wall from "./images/wall.jpg";
 import one from "./images/1.png";
 import two from "./images/2.png";
@@ -14,7 +12,6 @@ import four from "./images/4.png";
 import five from "./images/5.png";
 import six from "./images/6.png";
 import floor from "./images/floor.jpg";
-
 
 let camera, scene, renderer;
 
@@ -127,68 +124,75 @@ function init() {
   scene.add(planeTop);
 
   const floorTexture = new THREE.TextureLoader().load(floor);
-  const planeBottom = new THREE.Mesh(
+  const floorPlane = new THREE.Mesh(
     planeGeo,
     new THREE.MeshPhongMaterial({ map: floorTexture })
   );
-  planeBottom.rotateX(-Math.PI / 2);
-  scene.add(planeBottom);
+  floorPlane.rotateX(-Math.PI / 2);
+  scene.add(floorPlane);
 
-  const frontWallTexture = new THREE.TextureLoader().load(rightWall);
-  const planeFront = new THREE.Mesh(
+  const wallTexture = new THREE.TextureLoader().load(wall);
+  const frontWallPlane = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map: frontWallTexture })
+    new THREE.MeshPhongMaterial({ map: wallTexture })
   );
-  planeFront.position.z = 50;
-  planeFront.position.y = 50;
-  planeFront.rotateY(Math.PI);
-  scene.add(planeFront);
+  frontWallPlane.position.z = 50;
+  frontWallPlane.position.y = 50;
+  frontWallPlane.rotateY(Math.PI);
+  scene.add(frontWallPlane);
 
-  const backWallTexture = new THREE.TextureLoader().load(wall);
-  const planeBack = new THREE.Mesh(
+  const backWallPlane = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map:  backWallTexture})
-
+    new THREE.MeshPhongMaterial({ map:  wallTexture})
   );
-  planeBack.position.z = -50;
-  planeBack.position.y = 50;
+  backWallPlane.position.z = -50;
+  backWallPlane.position.y = 50;
   //planeBack.rotateY( Math.PI );
-  //planeBack.userData = { URL: "https://duckduckgo.com/"};
-  scene.add(planeBack);
+  scene.add(backWallPlane);
 
-  const pictureGeo = new THREE.PlaneGeometry(48, 62);
-  const pictureTexture = new THREE.TextureLoader().load(forgetMonkeys);
-  const planePicture = new THREE.Mesh(
-    pictureGeo,
-    new THREE.MeshPhongMaterial({ map:  pictureTexture})
-
+  const monkeyGeo = new THREE.PlaneGeometry(67.2, 86.8);
+  const monkeyTexture = new THREE.TextureLoader().load(forgetMonkeys);
+  const monkeyPlain = new THREE.Mesh(
+    monkeyGeo,
+    new THREE.MeshPhongMaterial({ map:  monkeyTexture})
   );
-  planePicture.position.z = -49;
-  planePicture.position.y = 50;
-  //planeBack.rotateY( Math.PI );
-  planePicture.userData = { URL: "https://duckduckgo.com/"};
-  scene.add(planePicture);
+  monkeyPlain.position.z = -49;
+  monkeyPlain.position.y = 50;
+  //monkeyPlain.rotateY( Math.PI );
+  monkeyPlain.userData = { URL: "https://duckduckgo.com/"};
+  scene.add(monkeyPlain);
 
 
-  const rightWallTexture = new THREE.TextureLoader().load(rightWall);
-  const planeRight = new THREE.Mesh(
+  const rightWallPlane = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map: rightWallTexture })
+    new THREE.MeshPhongMaterial({ map: wallTexture })
   );
-  planeRight.position.x = 50;
-  planeRight.position.y = 50;
-  planeRight.rotateY(-Math.PI / 2);
-  scene.add(planeRight);
+  rightWallPlane.position.x = 50;
+  rightWallPlane.position.y = 50;
+  rightWallPlane.rotateY(-Math.PI / 2);
+  scene.add(rightWallPlane);
 
-  const leftWallTexture = new THREE.TextureLoader().load(leftWall);
-  const planeLeft = new THREE.Mesh(
+  const leftWallPlane = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map: leftWallTexture })
+    new THREE.MeshPhongMaterial({ map: wallTexture })
   );
-  planeLeft.position.x = -50;
-  planeLeft.position.y = 50;
-  planeLeft.rotateY(Math.PI / 2);
-  scene.add(planeLeft);
+
+  leftWallPlane.position.x = -50;
+  leftWallPlane.position.y = 50;
+  leftWallPlane.rotateY(Math.PI / 2);
+  scene.add(leftWallPlane);
+
+  const portraitGeo = new THREE.PlaneGeometry(30, 38);
+  const portraitTexture = new THREE.TextureLoader().load(portrait);
+  const portraitPlane = new THREE.Mesh(
+    portraitGeo,
+    new THREE.MeshPhongMaterial({ map: portraitTexture })
+  );
+
+  portraitPlane.position.x = -49;
+  portraitPlane.position.y = 60;
+  portraitPlane.rotateY(Math.PI / 2);
+  scene.add(portraitPlane);
 
   // lights
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
