@@ -32,36 +32,7 @@ let portalCamera,
   bottomRightCorner,
   topLeftCorner;
 
-
-  
-  function handleHover(event) { //does not work
-    event.preventDefault();
-    console.log(event)
-    mouse.x = (event.clientX / window.innerWidth) * 2 -1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
-    console.log('before if', intersects.length)
-    if (intersects.length > 0 && intersects[0].object.userData.URL) {
-      console.log('inside if')
-        const body = document.querySelector('body');
-        body.style.cursor = 'pointer'
-    }
-  } 
-
 let raycaster, mouse;
-  
-  function handleClick(event) {
-    event.preventDefault();
-    mouse.x = (event.clientX / window.innerWidth) * 2 -1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
-    if (intersects.length > 0 && intersects[0].object.userData.URL) {
-        console.log('two', intersects[0])
-        window.open(intersects[0].object.userData.URL);
-    }
-  } 
 
 function init() {
   // renderer
@@ -240,7 +211,7 @@ function init() {
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
   window.addEventListener("click", handleClick);
-  window.addEventListener("mouseover", handleHover); //does not work
+  window.addEventListener("mousemove", handleHover); 
 }
 
 function onWindowResize() {
@@ -248,6 +219,28 @@ function onWindowResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+function handleHover(event) {
+  const body = document.querySelector('body');
+  body.style.cursor = 'default'
+  mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0 && intersects[0].object.userData.URL) {
+      body.style.cursor = 'pointer'
+  }
+} 
+
+function handleClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0 && intersects[0].object.userData.URL) {
+      window.open(intersects[0].object.userData.URL);
+  }
+} 
 
 function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
   // set the portal camera position to be reflected about the portal plane
