@@ -18,6 +18,10 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.(glb|gltf)$/,
+        loader: "file-loader",
+      },
     ],
   },
   performance: {

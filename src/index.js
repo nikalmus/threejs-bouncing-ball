@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import forgetMonkeys from "./images/forgetMonkeys.jpg";
 import portrait from "./images/portrait.jpg";
@@ -12,12 +13,14 @@ import four from "./images/4.png";
 import five from "./images/5.png";
 import six from "./images/6.png";
 import floor from "./images/floor.jpg";
+import monkey from "./images/mk1.glb";
 
 let camera, scene, renderer;
 
 let cameraControls;
 
 let smallSphereOne, smallSphereTwo;
+let monkeyVarpet;
 
 let portalCamera,
   leftPortal,
@@ -77,6 +80,24 @@ function init() {
   scene.add(smallSphereOne);
   smallSphereTwo = new THREE.Mesh(geometry, materials);
   scene.add(smallSphereTwo);
+
+   //glb model
+   const loader = new GLTFLoader();
+
+   loader.load( monkey, function ( gltf ) {
+   gltf.scene.scale.set(2,2,2)
+   monkeyVarpet = gltf.scene.children[0]
+   monkeyVarpet.position.set(3,6,10)
+   //gltf.scene.position.set(3,6,10)
+   scene.add( monkeyVarpet );
+   //const blueLight2 = new THREE.PointLight(0xff0000, 0.25, 1000);
+   //blueLight2.position.set(10, 1, 28);
+   //scene.add(blueLight2);
+ }, undefined, function ( error ) {
+ 
+   console.error( error );
+ 
+ } );
 
   // portals
   portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
@@ -196,7 +217,8 @@ function init() {
 
   // lights
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
-  mainLight.position.y = 12;
+  mainLight.position.y = 7;
+  mainLight.position.z = 30;
   scene.add(mainLight);
 
   const greenLight = new THREE.PointLight(0x00ff00, 0.25, 1000);
@@ -211,6 +233,7 @@ function init() {
   blueLight.position.set(0, 50, 550);
   scene.add(blueLight);
 
+  //events
   window.addEventListener("resize", onWindowResize);
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
@@ -285,6 +308,7 @@ function animate() {
   // move the bouncing sphere(s)
   const timerOne = Date.now() * 0.01;
   const timerTwo = timerOne + Math.PI * 10.0;
+  const timerThree = timerTwo + Math.PI * 20.0;
 
   smallSphereOne.position.set(
     Math.cos(timerOne * 0.1) * 30,
@@ -301,6 +325,19 @@ function animate() {
   );
   smallSphereTwo.rotation.y = Math.PI / 2 - timerTwo * 0.1;
   smallSphereTwo.rotation.z = timerTwo * 0.8;
+
+
+  monkeyVarpet.position.set(
+    Math.cos(timerThree * -0.2) * 20,
+    Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, // 15 changed to 30, jumps higher
+    //also, Math.cos(timerThree * 0.2) bounces synced between dice and varpet.
+    //if change 0.2 to 0.5 for each die bounce 3 bounces of varpet
+    //Math.sin(timerThree * 0.1) * 15
+  );
+  monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; //bounce
+  //monkeyVarpet.rotation.y = Math.PI / 2 - timerThree; //spins & bounce
+
+  //monkeyVarpet.rotation.z = timerThree * 0.8; //not interesting to rotate z
 
   // save the original camera properties
   const currentRenderTarget = renderer.getRenderTarget();
