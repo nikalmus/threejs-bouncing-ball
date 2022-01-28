@@ -27,6 +27,10 @@ module.exports = {
   performance: {
     maxEntrypointSize: 1024000,
     maxAssetSize: 1024000,
+    hints: 'warning',
+    assetFilter: function(assetFilename) {
+      return !assetFilename.endsWith('.glb');
+    },
   },
   devServer: {
     publicPath: "/public/",

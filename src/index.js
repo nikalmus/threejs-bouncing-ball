@@ -13,7 +13,7 @@ import four from "./images/4.png";
 import five from "./images/5.png";
 import six from "./images/6.png";
 import floor from "./images/floor.jpg";
-import monkey from "./images/mk1.glb";
+import monkey from "./images/mk-0-3.glb";
 
 let camera, scene, renderer;
 
@@ -34,7 +34,13 @@ let portalCamera,
 
 let raycaster, mouse;
 
-function init() {
+async function load3dModel (){
+  const loader = new GLTFLoader();
+  const gltf = await loader.loadAsync( monkey);
+  return gltf.scene.children[0]
+}
+
+async function init() {
   // renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -45,6 +51,12 @@ function init() {
 
   // scene
   scene = new THREE.Scene();
+  
+  //glib
+  monkeyVarpet = await load3dModel();
+  monkeyVarpet.scale.set(2,2,2)
+  monkeyVarpet.position.set(3,6,10)
+  scene.add( monkeyVarpet );
 
   // camera
   camera = new THREE.PerspectiveCamera(
@@ -80,24 +92,6 @@ function init() {
   scene.add(smallSphereOne);
   smallSphereTwo = new THREE.Mesh(geometry, materials);
   scene.add(smallSphereTwo);
-
-   //glb model
-   const loader = new GLTFLoader();
-
-   loader.load( monkey, function ( gltf ) {
-   gltf.scene.scale.set(2,2,2)
-   monkeyVarpet = gltf.scene.children[0]
-   monkeyVarpet.position.set(3,6,10)
-   //gltf.scene.position.set(3,6,10)
-   scene.add( monkeyVarpet );
-   //const blueLight2 = new THREE.PointLight(0xff0000, 0.25, 1000);
-   //blueLight2.position.set(10, 1, 28);
-   //scene.add(blueLight2);
- }, undefined, function ( error ) {
- 
-   console.error( error );
- 
- } );
 
   // portals
   portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
@@ -302,7 +296,7 @@ function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
   thisPortalMesh.visible = true; // re-enable this portal's visibility for general rendering
 }
 
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
 
   // move the bouncing sphere(s)
@@ -326,7 +320,9 @@ function animate() {
   smallSphereTwo.rotation.y = Math.PI / 2 - timerTwo * 0.1;
   smallSphereTwo.rotation.z = timerTwo * 0.8;
 
-
+  //if(monkeyVarpet){
+  //if(true){
+    //console.log('monkeyVarpet inside animate', monkeyVarpet);
   monkeyVarpet.position.set(
     Math.cos(timerThree * -0.2) * 20,
     Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, // 15 changed to 30, jumps higher
@@ -334,10 +330,12 @@ function animate() {
     //if change 0.2 to 0.5 for each die bounce 3 bounces of varpet
     //Math.sin(timerThree * 0.1) * 15
   );
+
   monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; //bounce
   //monkeyVarpet.rotation.y = Math.PI / 2 - timerThree; //spins & bounce
 
   //monkeyVarpet.rotation.z = timerThree * 0.8; //not interesting to rotate z
+  //}
 
   // save the original camera properties
   const currentRenderTarget = renderer.getRenderTarget();
@@ -359,5 +357,9 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-init();
-animate();
+async function main(){
+  await init();
+  animate();
+}
+
+main();
