@@ -52,10 +52,11 @@ async function init() {
   // scene
   scene = new THREE.Scene();
   
-  //glib
+  //glb
   monkeyVarpet = await load3dModel();
-  monkeyVarpet.scale.set(2,2,2)
-  monkeyVarpet.position.set(3,6,10)
+  monkeyVarpet.scale.set(2.5,2.5,2.5)
+
+  //no need to set monkeyVarpet.position here since it's animated in animate()
   scene.add( monkeyVarpet );
 
   // camera
@@ -64,7 +65,7 @@ async function init() {
     window.innerWidth / window.innerHeight,
     1,
     5000
-  );
+  ); 
   camera.position.set(0, 75, 160);
 
   cameraControls = new OrbitControls(camera, renderer.domElement);
@@ -73,12 +74,11 @@ async function init() {
   cameraControls.minDistance = 10;
   cameraControls.update();
 
-  //
-
   const planeGeo = new THREE.PlaneGeometry(100.1, 100.1);
 
-  // bouncing dice
-  const portalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.0);
+  // dice
+  const portalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  
   const geometry = new RoundedBoxGeometry(5,5,5,6,1);
   const faces = [one, two, three, four, five, six];
   const materials = faces.map((face) => new THREE.MeshPhongMaterial({
@@ -94,8 +94,15 @@ async function init() {
   scene.add(smallSphereTwo);
 
   // portals
-  portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
+  const pFOV = 45;
+  const pAspectRatio = 1;
+  const pNear = 0.1;
+  const pFar = 500;
+  
+  portalCamera = new THREE.PerspectiveCamera(pFOV, pAspectRatio, pNear, pFar);
+
   scene.add(portalCamera);
+
   bottomLeftCorner = new THREE.Vector3();
   bottomRightCorner = new THREE.Vector3();
   topLeftCorner = new THREE.Vector3();
@@ -106,6 +113,13 @@ async function init() {
     magFilter: THREE.LinearFilter,
     format: THREE.RGBFormat,
   });
+  
+  rightPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBFormat,
+  });
+
   leftPortal = new THREE.Mesh(
     planeGeo,
     new THREE.MeshBasicMaterial({ map: leftPortalTexture.texture })
@@ -115,11 +129,7 @@ async function init() {
   leftPortal.scale.set(0.35, 0.35, 0.35);
   scene.add(leftPortal);
 
-  rightPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBFormat,
-  });
+  
   rightPortal = new THREE.Mesh(
     planeGeo,
     new THREE.MeshBasicMaterial({ map: rightPortalTexture.texture })
@@ -210,8 +220,9 @@ async function init() {
   scene.add(portraitPlane);
 
   // lights
+
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
-  mainLight.position.y = 7;
+  mainLight.position.y = 100;  //used to be 7
   mainLight.position.z = 30;
   scene.add(mainLight);
 
@@ -320,9 +331,7 @@ function animate(){
   smallSphereTwo.rotation.y = Math.PI / 2 - timerTwo * 0.1;
   smallSphereTwo.rotation.z = timerTwo * 0.8;
 
-  //if(monkeyVarpet){
-  //if(true){
-    //console.log('monkeyVarpet inside animate', monkeyVarpet);
+
   monkeyVarpet.position.set(
     Math.cos(timerThree * -0.2) * 20,
     Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, // 15 changed to 30, jumps higher
@@ -346,7 +355,7 @@ function animate(){
 
   // render the portal effect
   renderPortal(leftPortal, rightPortal, leftPortalTexture);
-  renderPortal(rightPortal, leftPortal, rightPortalTexture);
+  renderPortal(rightPortal, leftPortal, rightPortalTexture); 
 
   // restore the original rendering properties
   renderer.xr.enabled = currentXrEnabled;
