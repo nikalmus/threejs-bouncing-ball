@@ -108,7 +108,7 @@ async function init() {
   topLeftCorner = new THREE.Vector3();
   reflectedPosition = new THREE.Vector3();
 
-  leftPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
+  leftPortalTexture = new THREE.WebGLRenderTarget(256, 256, { 
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
     format: THREE.RGBFormat,
@@ -124,9 +124,9 @@ async function init() {
     planeGeo,
     new THREE.MeshBasicMaterial({ map: leftPortalTexture.texture })
   );
-  leftPortal.position.x = -30;
-  leftPortal.position.y = 20;
-  leftPortal.scale.set(0.35, 0.35, 0.35);
+  leftPortal.position.x = -25;
+  leftPortal.position.y = 10;
+  leftPortal.scale.set(0.2, 0.4, 0.2); 
   scene.add(leftPortal);
 
   
@@ -134,9 +134,9 @@ async function init() {
     planeGeo,
     new THREE.MeshBasicMaterial({ map: rightPortalTexture.texture })
   );
-  rightPortal.position.x = 30;
-  rightPortal.position.y = 20;
-  rightPortal.scale.set(0.35, 0.35, 0.35);
+  rightPortal.position.x = 25;
+  rightPortal.position.y = 10;
+  rightPortal.scale.set(0.2, 0.4, 0.2);
   scene.add(rightPortal);
 
   // walls
@@ -337,7 +337,7 @@ function animate(){
     Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, // 15 changed to 30, jumps higher
     //also, Math.cos(timerThree * 0.2) bounces synced between dice and varpet.
     //if change 0.2 to 0.5 for each die bounce 3 bounces of varpet
-    //Math.sin(timerThree * 0.1) * 15
+    monkeyVarpet.geometry.boundingSphere.radius*2 + 1
   );
 
   monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; //bounce
