@@ -19,15 +19,15 @@ let camera, scene, renderer;
 
 let cameraControls;
 
-let smallSphereOne, smallSphereTwo;
+let dice1, dice2;
 let monkeyVarpet;
 
 let portalCamera,
   leftPortal,
   rightPortal,
   leftPortalTexture,
-  reflectedPosition,
   rightPortalTexture,
+  reflectedPosition,
   bottomLeftCorner,
   bottomRightCorner,
   topLeftCorner;
@@ -40,8 +40,18 @@ async function load3dModel (){
   return gltf.scene.children[0]
 }
 
+async function loadImages (images, options={}) {
+  const loader = new THREE.TextureLoader();
+  const promises =  images.map(async (img) => { 
+      return new THREE.MeshPhongMaterial({
+        map: await loader.loadAsync(img),
+        ...options
+      })
+  });
+  return Promise.all(promises);
+};
+
 async function init() {
-  // renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -49,14 +59,11 @@ async function init() {
   renderer.domElement.id = "canvas";
   document.body.appendChild(renderer.domElement);
 
-  // scene
   scene = new THREE.Scene();
   
   //glb
   monkeyVarpet = await load3dModel();
   monkeyVarpet.scale.set(2.5,2.5,2.5)
-
-  //no need to set monkeyVarpet.position here since it's animated in animate()
   scene.add( monkeyVarpet );
 
   // camera
@@ -81,17 +88,18 @@ async function init() {
   
   const geometry = new RoundedBoxGeometry(5,5,5,6,1);
   const faces = [one, two, three, four, five, six];
-  const materials = faces.map((face) => new THREE.MeshPhongMaterial({
-    map: new THREE.TextureLoader().load(face),
+  const materialOptions = {
     emissive: 0x333333,
     flatShading: true,
     clippingPlanes: [portalPlane],
-    clipShadows: true,
-  }));
-  smallSphereOne = new THREE.Mesh(geometry, materials);
-  scene.add(smallSphereOne);
-  smallSphereTwo = new THREE.Mesh(geometry, materials);
-  scene.add(smallSphereTwo);
+    clipShadows: true
+  }
+  const materials = await loadImages(faces, materialOptions);
+
+  dice1 = new THREE.Mesh(geometry, materials);
+  scene.add(dice1);
+  dice2 = new THREE.Mesh(geometry, materials);
+  scene.add(dice2);
 
   // portals
   const pFOV = 45;
@@ -140,6 +148,8 @@ async function init() {
   scene.add(rightPortal);
 
   // walls
+  const loader = new THREE.TextureLoader();
+
   const planeTop = new THREE.Mesh(
     planeGeo,
     new THREE.MeshPhongMaterial({ color: 0xffffff })
@@ -148,7 +158,7 @@ async function init() {
   planeTop.rotateX(Math.PI / 2);
   scene.add(planeTop);
 
-  const floorTexture = new THREE.TextureLoader().load(floor);
+  const floorTexture = await loader.loadAsync(floor);
   const floorPlane = new THREE.Mesh(
     planeGeo,
     new THREE.MeshPhongMaterial({ map: floorTexture })
@@ -156,7 +166,7 @@ async function init() {
   floorPlane.rotateX(-Math.PI / 2);
   scene.add(floorPlane);
 
-  const wallTexture = new THREE.TextureLoader().load(wall);
+  const wallTexture = await loader.loadAsync(wall);
   const frontWallPlane = new THREE.Mesh(
     planeGeo,
     new THREE.MeshPhongMaterial({ map: wallTexture })
@@ -172,18 +182,16 @@ async function init() {
   );
   backWallPlane.position.z = -50;
   backWallPlane.position.y = 50;
-  //planeBack.rotateY( Math.PI );
   scene.add(backWallPlane);
 
   const monkeyGeo = new THREE.PlaneGeometry(67.2, 86.8);
-  const monkeyTexture = new THREE.TextureLoader().load(forgetMonkeys);
+  const monkeyTexture = await loader.loadAsync(forgetMonkeys);
   const monkeyPlain = new THREE.Mesh(
     monkeyGeo,
     new THREE.MeshPhongMaterial({ map:  monkeyTexture})
   );
   monkeyPlain.position.z = -49;
   monkeyPlain.position.y = 50;
-  //monkeyPlain.rotateY( Math.PI );
   monkeyPlain.userData = { URL: "https://duckduckgo.com/"};
   scene.add(monkeyPlain);
 
@@ -208,7 +216,7 @@ async function init() {
   scene.add(leftWallPlane);
 
   const portraitGeo = new THREE.PlaneGeometry(30, 38);
-  const portraitTexture = new THREE.TextureLoader().load(portrait);
+  const portraitTexture = await loader.loadAsync(portrait);
   const portraitPlane = new THREE.Mesh(
     portraitGeo,
     new THREE.MeshPhongMaterial({ map: portraitTexture })
@@ -220,7 +228,6 @@ async function init() {
   scene.add(portraitPlane);
 
   // lights
-
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
   mainLight.position.y = 100;  //used to be 7
   mainLight.position.z = 30;
@@ -274,20 +281,18 @@ function handleClick(event) {
   }
 } 
 
-function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
-  // set the portal camera position to be reflected about the portal plane
-  thisPortalMesh.worldToLocal(reflectedPosition.copy(camera.position));
+function renderPortal(thisPortal, otherPortal, thisPortalTexture) {
+  thisPortal.worldToLocal(reflectedPosition.copy(camera.position));
   reflectedPosition.x *= -1.0;
   reflectedPosition.z *= -1.0;
-  otherPortalMesh.localToWorld(reflectedPosition);
+  otherPortal.localToWorld(reflectedPosition);
   portalCamera.position.copy(reflectedPosition);
 
-  // grab the corners of the other portal
-  // - note: the portal is viewed backwards; flip the left/right coordinates
-  otherPortalMesh.localToWorld(bottomLeftCorner.set(50.05, -50.05, 0.0));
-  otherPortalMesh.localToWorld(bottomRightCorner.set(-50.05, -50.05, 0.0));
-  otherPortalMesh.localToWorld(topLeftCorner.set(50.05, 50.05, 0.0));
-  // set the projection matrix to encompass the portal's frame
+
+  otherPortal.localToWorld(bottomLeftCorner.set(50.05, -50.05, 0.0));
+  otherPortal.localToWorld(bottomRightCorner.set(-50.05, -50.05, 0.0));
+  otherPortal.localToWorld(topLeftCorner.set(50.05, 50.05, 0.0));
+  // projection matrix to include the portal's frame
   //CameraUtils.frameCorners(
   frameCorners(
     portalCamera,
@@ -297,72 +302,59 @@ function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
     false
   );
 
-  // render the portal
   thisPortalTexture.texture.encoding = renderer.outputEncoding;
   renderer.setRenderTarget(thisPortalTexture);
-  renderer.state.buffers.depth.setMask(true); // make sure the depth buffer is writable so it can be properly cleared, see #18897
+  renderer.state.buffers.depth.setMask(true); 
   if (renderer.autoClear === false) renderer.clear();
-  thisPortalMesh.visible = false; // hide this portal from its own rendering
+  thisPortal.visible = false; 
   renderer.render(scene, portalCamera);
-  thisPortalMesh.visible = true; // re-enable this portal's visibility for general rendering
+  thisPortal.visible = true; 
 }
 
 function animate(){
   requestAnimationFrame(animate);
 
-  // move the bouncing sphere(s)
   const timerOne = Date.now() * 0.01;
   const timerTwo = timerOne + Math.PI * 10.0;
   const timerThree = timerTwo + Math.PI * 20.0;
 
-  smallSphereOne.position.set(
+  dice1.position.set(
     Math.cos(timerOne * 0.1) * 30,
     Math.abs(Math.cos(timerOne * 0.2)) * 20 + 5,
     Math.sin(timerOne * 0.1) * 30
   );
-  smallSphereOne.rotation.y = Math.PI / 2 - timerOne * 0.1;
-  smallSphereOne.rotation.z = timerOne * 0.8;
+  dice1.rotation.y = Math.PI / 2 - timerOne * 0.1;
+  dice1.rotation.z = timerOne * 0.8;
 
-  smallSphereTwo.position.set(
+  dice2.position.set(
     Math.cos(timerTwo * 0.1) * 30,
     Math.abs(Math.cos(timerTwo * 0.2)) * 20 + 5,
     Math.sin(timerTwo * 0.1) * 30
   );
-  smallSphereTwo.rotation.y = Math.PI / 2 - timerTwo * 0.1;
-  smallSphereTwo.rotation.z = timerTwo * 0.8;
+  dice2.rotation.y = Math.PI / 2 - timerTwo * 0.1;
+  dice2.rotation.z = timerTwo * 0.8;
 
 
   monkeyVarpet.position.set(
     Math.cos(timerThree * -0.2) * 20,
-    Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, // 15 changed to 30, jumps higher
-    //also, Math.cos(timerThree * 0.2) bounces synced between dice and varpet.
-    //if change 0.2 to 0.5 for each die bounce 3 bounces of varpet
+    Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, 
     monkeyVarpet.geometry.boundingSphere.radius*2 + 1
   );
 
-  monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; //bounce
-  //monkeyVarpet.rotation.y = Math.PI / 2 - timerThree; //spins & bounce
-
-  //monkeyVarpet.rotation.z = timerThree * 0.8; //not interesting to rotate z
-  //}
-
-  // save the original camera properties
+  monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; 
   const currentRenderTarget = renderer.getRenderTarget();
   const currentXrEnabled = renderer.xr.enabled;
   const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
-  renderer.xr.enabled = false; // Avoid camera modification
-  renderer.shadowMap.autoUpdate = false; // Avoid re-computing shadows
+  renderer.xr.enabled = false;
+  renderer.shadowMap.autoUpdate = false; 
 
-  // render the portal effect
   renderPortal(leftPortal, rightPortal, leftPortalTexture);
   renderPortal(rightPortal, leftPortal, rightPortalTexture); 
 
-  // restore the original rendering properties
   renderer.xr.enabled = currentXrEnabled;
   renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
   renderer.setRenderTarget(currentRenderTarget);
 
-  // render the main scene
   renderer.render(scene, camera);
 }
 
