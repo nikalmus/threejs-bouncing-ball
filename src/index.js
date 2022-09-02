@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { frameCorners } from "three/examples/jsm/utils/CameraUtils";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import forgetMonkeys from "./images/forgetMonkeys.jpg";
 import portrait from "./images/portrait.jpg";
@@ -14,6 +14,7 @@ import five from "./images/5.png";
 import six from "./images/6.png";
 import floor from "./images/floor.jpg";
 import monkey from "./images/mk-0-3.glb";
+import "./style.css";
 
 let camera, scene, renderer;
 
@@ -34,21 +35,49 @@ let portalCamera,
 
 let raycaster, mouse;
 
-async function load3dModel (){
-  const loader = new GLTFLoader();
-  const gltf = await loader.loadAsync( monkey);
-  return gltf.scene.children[0]
+async function load3dModel() {
+  const loader = new GLTFLoader(loadingManager);
+  const gltf = await loader.loadAsync(monkey);
+  return gltf.scene.children[0];
 }
 
-async function loadImages (images, options={}) {
+async function loadImages(images, options = {}) {
   const loader = new THREE.TextureLoader();
-  const promises =  images.map(async (img) => { 
-      return new THREE.MeshPhongMaterial({
-        map: await loader.loadAsync(img),
-        ...options
-      })
+  const promises = images.map(async (img) => {
+    return new THREE.MeshPhongMaterial({
+      map: await loader.loadAsync(img),
+      ...options,
+    });
   });
   return Promise.all(promises);
+}
+
+const loadingManager = new THREE.LoadingManager();
+
+const div = document.createElement("div");
+div.setAttribute("class", "progress-bar-container");
+document.body.appendChild(div);
+const label = document.createElement("label");
+label.setAttribute("for", "progress-bar");
+label.innerHTML = "Loading...";
+div.appendChild(label);
+const progress = document.createElement("PROGRESS");
+progress.setAttribute("id", "progress-bar");
+progress.setAttribute("value", "0");
+progress.setAttribute("max", "100");
+div.appendChild(progress);
+
+const progressBar = document.getElementById("progress-bar");
+console.log("progressBar", progressBar);
+
+loadingManager.onProgress = function (url, loaded, total) {
+  progressBar.value = (loaded / total) * 100;
+};
+
+const progressBarContainer = document.querySelector(".progress-bar-container");
+
+loadingManager.onLoad = function () {
+  progressBarContainer.style.display = "none";
 };
 
 async function init() {
@@ -60,11 +89,11 @@ async function init() {
   document.body.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
-  
+
   //glb
   monkeyVarpet = await load3dModel();
-  monkeyVarpet.scale.set(2.5,2.5,2.5)
-  scene.add( monkeyVarpet );
+  monkeyVarpet.scale.set(2.5, 2.5, 2.5);
+  scene.add(monkeyVarpet);
 
   // camera
   camera = new THREE.PerspectiveCamera(
@@ -72,7 +101,7 @@ async function init() {
     window.innerWidth / window.innerHeight,
     1,
     5000
-  ); 
+  );
   camera.position.set(0, 75, 160);
 
   cameraControls = new OrbitControls(camera, renderer.domElement);
@@ -85,15 +114,15 @@ async function init() {
 
   // dice
   const portalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  
-  const geometry = new RoundedBoxGeometry(5,5,5,6,1);
+
+  const geometry = new RoundedBoxGeometry(5, 5, 5, 6, 1);
   const faces = [one, two, three, four, five, six];
   const materialOptions = {
     emissive: 0x333333,
     flatShading: true,
     clippingPlanes: [portalPlane],
-    clipShadows: true
-  }
+    clipShadows: true,
+  };
   const materials = await loadImages(faces, materialOptions);
 
   dice1 = new THREE.Mesh(geometry, materials);
@@ -106,7 +135,7 @@ async function init() {
   const pAspectRatio = 1;
   const pNear = 0.1;
   const pFar = 500;
-  
+
   portalCamera = new THREE.PerspectiveCamera(pFOV, pAspectRatio, pNear, pFar);
 
   scene.add(portalCamera);
@@ -116,12 +145,12 @@ async function init() {
   topLeftCorner = new THREE.Vector3();
   reflectedPosition = new THREE.Vector3();
 
-  leftPortalTexture = new THREE.WebGLRenderTarget(256, 256, { 
+  leftPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
     format: THREE.RGBFormat,
   });
-  
+
   rightPortalTexture = new THREE.WebGLRenderTarget(256, 256, {
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
@@ -134,10 +163,9 @@ async function init() {
   );
   leftPortal.position.x = -25;
   leftPortal.position.y = 10;
-  leftPortal.scale.set(0.2, 0.4, 0.2); 
+  leftPortal.scale.set(0.2, 0.4, 0.2);
   scene.add(leftPortal);
 
-  
   rightPortal = new THREE.Mesh(
     planeGeo,
     new THREE.MeshBasicMaterial({ map: rightPortalTexture.texture })
@@ -178,7 +206,7 @@ async function init() {
 
   const backWallPlane = new THREE.Mesh(
     planeGeo,
-    new THREE.MeshPhongMaterial({ map:  wallTexture})
+    new THREE.MeshPhongMaterial({ map: wallTexture })
   );
   backWallPlane.position.z = -50;
   backWallPlane.position.y = 50;
@@ -188,13 +216,12 @@ async function init() {
   const monkeyTexture = await loader.loadAsync(forgetMonkeys);
   const monkeyPlain = new THREE.Mesh(
     monkeyGeo,
-    new THREE.MeshPhongMaterial({ map:  monkeyTexture})
+    new THREE.MeshPhongMaterial({ map: monkeyTexture })
   );
   monkeyPlain.position.z = -49;
   monkeyPlain.position.y = 50;
-  monkeyPlain.userData = { URL: "https://duckduckgo.com/"};
+  monkeyPlain.userData = { URL: "https://duckduckgo.com/" };
   scene.add(monkeyPlain);
-
 
   const rightWallPlane = new THREE.Mesh(
     planeGeo,
@@ -229,7 +256,7 @@ async function init() {
 
   // lights
   const mainLight = new THREE.PointLight(0xcccccc, 1.5, 250);
-  mainLight.position.y = 100;  //used to be 7
+  mainLight.position.y = 100; //used to be 7
   mainLight.position.z = 30;
   scene.add(mainLight);
 
@@ -250,7 +277,7 @@ async function init() {
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
   window.addEventListener("click", handleClick);
-  window.addEventListener("mousemove", handleHover); 
+  window.addEventListener("mousemove", handleHover);
 }
 
 function onWindowResize() {
@@ -260,26 +287,26 @@ function onWindowResize() {
 }
 
 function handleHover(event) {
-  const body = document.querySelector('body');
-  body.style.cursor = 'default'
-  mouse.x = (event.clientX / window.innerWidth) * 2 -1;
-  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  const body = document.querySelector("body");
+  body.style.cursor = "default";
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(scene.children);
   if (intersects.length > 0 && intersects[0].object.userData.URL) {
-      body.style.cursor = 'pointer'
+    body.style.cursor = "pointer";
   }
-} 
+}
 
 function handleClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 -1;
-  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(scene.children);
   if (intersects.length > 0 && intersects[0].object.userData.URL) {
-      window.open(intersects[0].object.userData.URL);
+    window.open(intersects[0].object.userData.URL);
   }
-} 
+}
 
 function renderPortal(thisPortal, otherPortal, thisPortalTexture) {
   thisPortal.worldToLocal(reflectedPosition.copy(camera.position));
@@ -287,7 +314,6 @@ function renderPortal(thisPortal, otherPortal, thisPortalTexture) {
   reflectedPosition.z *= -1.0;
   otherPortal.localToWorld(reflectedPosition);
   portalCamera.position.copy(reflectedPosition);
-
 
   otherPortal.localToWorld(bottomLeftCorner.set(50.05, -50.05, 0.0));
   otherPortal.localToWorld(bottomRightCorner.set(-50.05, -50.05, 0.0));
@@ -304,14 +330,14 @@ function renderPortal(thisPortal, otherPortal, thisPortalTexture) {
 
   thisPortalTexture.texture.encoding = renderer.outputEncoding;
   renderer.setRenderTarget(thisPortalTexture);
-  renderer.state.buffers.depth.setMask(true); 
+  renderer.state.buffers.depth.setMask(true);
   if (renderer.autoClear === false) renderer.clear();
-  thisPortal.visible = false; 
+  thisPortal.visible = false;
   renderer.render(scene, portalCamera);
-  thisPortal.visible = true; 
+  thisPortal.visible = true;
 }
 
-function animate(){
+function animate() {
   requestAnimationFrame(animate);
 
   const timerOne = Date.now() * 0.01;
@@ -334,22 +360,21 @@ function animate(){
   dice2.rotation.y = Math.PI / 2 - timerTwo * 0.1;
   dice2.rotation.z = timerTwo * 0.8;
 
-
   monkeyVarpet.position.set(
     Math.cos(timerThree * -0.2) * 20,
-    Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5, 
-    monkeyVarpet.geometry.boundingSphere.radius*2 + 1
+    Math.abs(Math.cos(timerThree * 0.2)) * 15 + 5,
+    monkeyVarpet.geometry.boundingSphere.radius * 2 + 1
   );
 
-  monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1; 
+  monkeyVarpet.rotation.y = Math.PI / 2 - timerThree * 0.1;
   const currentRenderTarget = renderer.getRenderTarget();
   const currentXrEnabled = renderer.xr.enabled;
   const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
   renderer.xr.enabled = false;
-  renderer.shadowMap.autoUpdate = false; 
+  renderer.shadowMap.autoUpdate = false;
 
   renderPortal(leftPortal, rightPortal, leftPortalTexture);
-  renderPortal(rightPortal, leftPortal, rightPortalTexture); 
+  renderPortal(rightPortal, leftPortal, rightPortalTexture);
 
   renderer.xr.enabled = currentXrEnabled;
   renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
@@ -358,7 +383,7 @@ function animate(){
   renderer.render(scene, camera);
 }
 
-async function main(){
+async function main() {
   await init();
   animate();
 }
