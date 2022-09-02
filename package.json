@@ -11,69 +11,18 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-
   "dependencies": {
-    "three": "^0.136.0",
-    "dotenv": "^10.0.0",
-    "prop-types": "15.7.2",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
-    "react-intl": "^5.23.0",
-    "react-query": "^3.34.7",
-    "react-router-dom": "^5.2.0"
+    "serve": "^14.0.1",
+    "three": "^0.136.0"
   },
-
   "devDependencies": {
-    "@babel/core": "7.15.5",
-    "@babel/eslint-parser": "7.15.4",
-    "@babel/preset-react": "7.14.5",
-    "babel-loader": "8.2.3",
-    "css-loader": "5.2.7",
+    "css-loader": "^5.2.7",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^4.5.2",
     "prettier": "^2.0.4",
-    "style-loader": "2.0.0",
+    "style-loader": "^2.0.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-react"
-    ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:import/errors",
-      "plugin:import/warnings"
-    ],
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "ecmaVersion": 2018,
-      "sourceType": "module",
-      "ecmaFeatures": {
-        "jsx": true
-      }
-    },
-    "env": {
-      "browser": true,
-      "node": true,
-      "es6": true,
-      "jest": true
-    },
-    "rules": {
-      "no-debugger": "off",
-      "no-console": "off",
-      "no-unused-vars": "warn",
-      "react/prop-types": "warn"
-    },
-    "settings": {
-      "react": {
-        "version": "detect"
-      }
-    },
-    "root": true
   }
 }

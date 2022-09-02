@@ -35,14 +35,18 @@ module.exports = {
         test: /\.(glb|gltf)$/,
         loader: "file-loader",
       },
+      {
+        test: /(\.css)$/,
+        use: ["style-loader", "css-loader"],
+      },
     ],
   },
   performance: {
     maxEntrypointSize: 1024000,
     maxAssetSize: 1024000,
-    hints: 'warning',
-    assetFilter: function(assetFilename) {
-      return !assetFilename.endsWith('.glb');
+    hints: "warning",
+    assetFilter: function (assetFilename) {
+      return !assetFilename.endsWith(".glb");
     },
   },
   devServer: {
